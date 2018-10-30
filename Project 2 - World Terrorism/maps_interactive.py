@@ -19,9 +19,24 @@ regions = df['New_region'].unique()
 
 app.layout = html.Div([
     # Header
+    # title
+    # html.H1(children = 'DASHBOARD', style={'textAlign':'center', 'padding-top':'10px'}),
+
     html.Div([
-        html.H1(children = 'Choose the Region and the Years', style={'textAlign':'center', 'padding-top':'10px'}),
-        html.Div([dcc.Dropdown(id = 'region_dropdown',
+        # left
+        html.Div([html.H3(children = 'Choose the Type of Weapon', style={'textAlign':'center', 'padding-top':'10px'}),
+
+                dcc.Checklist(id='weapon_type',
+                        options = [{'label':i, 'value':i} for i in df['Weapon_type'].unique()],
+                        values = ['Explosives'],
+                        labelStyle = {'display': 'block','margin-left':'150px'}),
+                ], style = {'float':'left', 'width':'30%','padding':'5px'}),
+
+
+        # Center
+        html.Div([html.H3(children = 'Choose the Region and Type', style={'textAlign':'center', 'padding-top':'10px'}),
+
+                dcc.Dropdown(id = 'region_dropdown',
                 options=[{'label': i, 'value': i} for i in regions],
                 value='europe'),
 
@@ -29,18 +44,32 @@ app.layout = html.Div([
                 options=[{'label': i, 'value': i} for i in ['Injured', 'Killed', 'Wounded']],
                 value='Injured',
                 labelStyle={'display': 'inline-block', 'padding':'10px 0px 10px 10px'})
-                ], style = {'float':'left', 'width':'20%', 'display':'inline-block'}),
+                ], style = {'float':'left', 'width':'25%'}),
+
+        # Right
+        html.Div([html.H3(children = 'Choose the arget of Attacks', style={'textAlign':'center', 'padding-top':'10px'}),
+
+                dcc.Checklist(id='target_type',
+                        options = [{'label':i, 'value':i} for i in df['Target_type'].unique()],
+                        values = df['Target_type'].unique(),
+                        labelStyle = {'display': 'inline-table','margin-left':'50px'}), #inline-table
+                ], style = {'float':'left', 'width':'40%','padding':'5px'}),
+
+
+
         html.Div([dcc.RangeSlider(id = 'year--slider', min = df['Year'].min()-1, max = df['Year'].max()+1,
                           value = [df['Year'].min(), df['Year'].max()],
                           #value = 1984,
                           marks = {str(year): str(year) for year in df['Year'].unique() if year%2==0 })
-                ], style = {'float':'right', 'width':'75%', 'margin-top':'15px'})
-        ], style={'borderBottom': 'thin lightgrey solid', 'backgroundColor': 'rgb(250, 250, 250)','padding': '10px 5px 70px 5px'}),
+                ], style = {'float':'right', 'width':'99%', 'margin-top':'15px'}),
+
+
+        ], style={'borderBottom': 'thin lightgrey solid', 'backgroundColor': 'rgb(250, 250, 250)','padding': '10px 5px 370px 5px'}),
 
     #Here will be my plots
     html.Div([
         dcc.Graph(id='maps')
-    ], style = {'border':'1px solid black'})
+    ])
 ])
 
 
@@ -48,11 +77,13 @@ app.layout = html.Div([
 @app.callback(dash.dependencies.Output('maps','figure'),
              [dash.dependencies.Input('region_dropdown','value'),
              dash.dependencies.Input('radio-buttons','value'),
-             dash.dependencies.Input('year--slider', 'value')])
+             dash.dependencies.Input('year--slider', 'value'),
+             dash.dependencies.Input('weapon_type','values')])
 
-def update_graph(region, variable, year_value):
+def update_graph(region, variable, year_value, weapon):
     dff = df.loc[(df['Year']>=year_value[0])&(df['Year']<=year_value[1])]
     dff = dff[dff['New_region']==region]
+    dff = dff[dff['Weapon_type'].isin(weapon)]
 
     we = dff.pivot_table(index = ['city', 'latitude','longitude'], values =[variable], aggfunc=sum).reset_index()
 
@@ -79,9 +110,12 @@ def update_graph(region, variable, year_value):
         return map
 
     # def for margin
-    # def get_margin(variable):
-    #     if variable =='europe': return go.Margin(l=50,t=75)
-    #     else: continue
+    def get_margin(region):
+        if region =='europe': return go.Margin(l=50,t=75)
+        elif region =='asia': return go.Margin(l=75,b=400)
+        elif region =='south america': return go.Margin(l=50,t=75)
+        elif region =='africa': return go.Margin(l=65,b=250)
+        elif region =='north america': return go.Margin(l=70,t=75)
 
     we = map_data(we, variable)
 
@@ -103,9 +137,9 @@ def update_graph(region, variable, year_value):
 
     layout = dict(
          title = 'Terrorist Attacks by Latitude/Longitude {}'.format(variable),
-         width = 800, height = 1000, hovermode = 'closest',
+         width = 1250, height = 1000, hovermode = 'closest',
          paper_bgcolor='black', font=dict(color = 'white'),
-         margin=go.Margin(l=50,t=75),
+         margin=get_margin(region),
          geo = dict(
              projection = dict(type = 'mercator'),
              scope = region,
