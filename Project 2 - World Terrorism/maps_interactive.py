@@ -11,6 +11,10 @@ app = dash.Dash()
 
 df= pd.read_csv('for_dash.csv')
 df.rename(columns = {'inj':'Injured'}, inplace = True)
+df['New_region'] = df['Region'].replace({'Western Europe':'europe', 'Southeast Asia':'asia', 'South Asia':'asia', 'South America':'south america',
+                                    'Sub-Saharan Africa':'africa','Eastern Europe':'europe', 'Middle East & North Africa':'asia',
+                                    'Central Asia':'asia', 'East Asia':'asia','North America':'north america', 'Australasia & Oceania':'asia',
+                                    'Central America & Caribbean':'north america'})
 regions = df['New_region'].unique()
 
 app.layout = html.Div([
@@ -47,9 +51,9 @@ app.layout = html.Div([
              dash.dependencies.Input('year--slider', 'value')])
 
 def update_graph(region, variable, year_value):
-    #dff = df[df['Year'] == year_value]
     dff = df.loc[(df['Year']>=year_value[0])&(df['Year']<=year_value[1])]
     dff = dff[dff['New_region']==region]
+
     we = dff.pivot_table(index = ['city', 'latitude','longitude'], values =[variable], aggfunc=sum).reset_index()
 
     ##### Prepare data
@@ -73,6 +77,11 @@ def update_graph(region, variable, year_value):
 
         map['size'] = map[variable].apply(lambda x: get_size(x))
         return map
+
+    # def for margin
+    # def get_margin(variable):
+    #     if variable =='europe': return go.Margin(l=50,t=75)
+    #     else: continue
 
     we = map_data(we, variable)
 
