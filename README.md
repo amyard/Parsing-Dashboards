@@ -18,21 +18,21 @@ cd Parsing-Dashboards
 
 Now create and activate a virtualenv (noting the python runtime):
 On a mac:
-virtualenv -p <python version> venv
-source venv/bin/activate
+    virtualenv -p <python version> venv
+    source venv/bin/activate
 
 On a Windows:
-virtualenv -p <python version> venv
-venv/Scripts/activate
+    virtualenv -p <python version> venv
+    venv/Scripts/activate
 
 Now that virtualenv is setup and active we can install the dependencies:
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 Once the dependencies have been installed, cd into the project.
 For Project 1 and some files from Project 2 use jupyter notebook.
 
 For Project 2 -> file "full_dash.py" / "maps_interactive.py" type in console:
 
-python <mane of file>.py
+    python <name of file>.py
 
 Then visit http://127.0.0.1:8050/
