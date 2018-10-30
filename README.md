@@ -14,18 +14,22 @@ You can clone or download this repo:
 https://github.com/amyard/Parsing-Dashboards.git
 
 Then cd into the repo:
-cd Parsing-Dashboards
+
+    cd Parsing-Dashboards
 
 Now create and activate a virtualenv (noting the python runtime):
 On a mac:
+
     virtualenv -p <python version> venv
     source venv/bin/activate
 
 On a Windows:
+
     virtualenv -p <python version> venv
     venv/Scripts/activate
 
 Now that virtualenv is setup and active we can install the dependencies:
+
     pip install -r requirements.txt
 
 Once the dependencies have been installed, cd into the project.
