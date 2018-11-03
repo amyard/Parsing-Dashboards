@@ -6,6 +6,11 @@ from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.offline as py
 import plotly.graph_objs as go
+import base64
+import os
+
+image_filename = os.getcwd()+'/test.png'
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
 
 app = dash.Dash()
@@ -126,8 +131,18 @@ app.layout = html.Div([
                                 value='Killed',
                                 labelStyle={'display': 'inline-block', 'padding':'10px 0px 10px 10px'}),
                 ], style = {'margin-left':'40%', 'color':'red'}),
-                dcc.Graph(id = 'terr_dynamic')
-            ], style = {'border':'1px solid lightgrey', 'margin':'10px 0px 10px 0px', 'box-shadow':'2px 2px 4px black', 'float':'left', 'width':'100%', 'backgroundColor':'lightgrey'}),
+                dcc.Graph(id = 'terr_dynamic'),
+
+                # Countries
+                html.Div([
+                    dcc.Graph(id='countries_terr')
+                ], style = {'overflowY': 'scroll', 'height': '350', 'border':'1px solid grey', 'box-shadow':'2px 2px 4px white', 'float':'left', 'width':'47%', 'margin':'1%'}),
+
+                # Countries
+                html.Div([
+                    dcc.Graph(id='cities_terr')
+                ], style = {'overflowY': 'scroll', 'height': '350', 'border':'1px solid grey', 'box-shadow':'2px 2px 4px white', 'float':'left', 'width':'47%', 'margin':'1%'}),
+            ], style = {'overflowY': 'scroll', 'border':'1px solid lightgrey', 'margin':'10px 0px 10px 0px', 'box-shadow':'2px 2px 4px black', 'float':'left', 'width':'100%', 'backgroundColor':'lightgrey'}),
 
             # Bubble chart
             # Bubble right header
@@ -153,6 +168,7 @@ app.layout = html.Div([
         ])
     ], style = tabs_styles)
 ])
+
 
 
 
@@ -401,6 +417,55 @@ def update_graph(region, year_value, action_bubble):
                       paper_bgcolor = 'lightgrey')
 
     return dict(data = full_bubble, layout = layout)
+
+
+#######################################################################
+### TAB 2
+### Counrties Bar chart
+@app.callback(dash.dependencies.Output('countries_terr','figure'),
+             [dash.dependencies.Input('region_dropdown','value'),
+             dash.dependencies.Input('year--slider', 'value'),
+             dash.dependencies.Input('killed/wounded', 'value')])
+
+
+def update_graph(region, year_value, variable):
+    df2 = df.loc[(df['Year']>=year_value[0])&(df['Year']<=year_value[1])]
+    df2 = df2[df2['Region'].isin(region)]
+    df2 = df2[df2[variable] !=0]
+
+    gr = df2.pivot_table(index = ['Country'], values=[variable], aggfunc=sum).sort_values(variable, ascending = True).reset_index()
+    trace = go.Bar(y=gr['Country'], x=gr[variable].values, orientation = 'h', hoverinfo = 'text',
+                    textposition='outside', textfont = dict(size = 10, color = 'black'), text =gr[variable].values) #
+    layout = go.Layout(title = 'All Countries by {}'.format(variable),
+                      height = gr['Country'].nunique()*22, margin = go.Margin(l=200), #height = 3000
+                      font = dict(color = 'white'), paper_bgcolor = 'black', plot_bgcolor = 'lightgrey',
+                      xaxis = dict(range = [0, gr[variable].max()*1.15]))
+
+    return dict(data = [trace], layout = layout)
+
+#######################################################################
+### TAB 2
+### Counrties Bar chart
+@app.callback(dash.dependencies.Output('cities_terr','figure'),
+             [dash.dependencies.Input('region_dropdown','value'),
+             dash.dependencies.Input('year--slider', 'value'),
+             dash.dependencies.Input('killed/wounded', 'value')])
+
+
+def update_graph(region, year_value, variable):
+    df2 = df.loc[(df['Year']>=year_value[0])&(df['Year']<=year_value[1])]
+    df2 = df2[df2['Region'].isin(region)]
+    df2 = df2[df2[variable] !=0]
+
+    gr = df2.pivot_table(index = ['city'], values=[variable], aggfunc=sum).sort_values(variable, ascending = True).reset_index()
+    trace = go.Bar(y=gr['city'], x=gr[variable].values, orientation = 'h', hoverinfo = 'text',
+                    textposition='outside', textfont = dict(size = 10, color = 'black'), text =gr[variable].values) #
+    layout = go.Layout(title = 'All Cities by {}'.format(variable),
+                      height = gr['city'].nunique()*18, margin = go.Margin(l=200),
+                      font = dict(color = 'white'), paper_bgcolor = 'black', plot_bgcolor = 'lightgrey',
+                      xaxis = dict(range = [0, gr[variable].max()*1.15]))
+
+    return dict(data = [trace], layout = layout)
 
 
 if __name__=='__main__':
